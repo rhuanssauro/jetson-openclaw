@@ -1,7 +1,8 @@
 # src/llm/ollama_client.py
+
 import aiohttp
-import json
 from loguru import logger
+
 
 class OllamaClient:
     def __init__(self, host, model):
@@ -22,14 +23,10 @@ class OllamaClient:
     async def chat(self, prompt, context=None):
         if not self.session:
             self.session = aiohttp.ClientSession()
-        
+
         # Simple completion endpoint, or chat depending on version
         url = f"{self.host}/api/generate"
-        payload = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False
-        }
+        payload = {"model": self.model, "prompt": prompt, "stream": False}
 
         try:
             async with self.session.post(url, json=payload) as resp:
@@ -39,6 +36,6 @@ class OllamaClient:
                 else:
                     logger.error(f"Ollama error: {resp.status} - {await resp.text()}")
                     return "Sorry, my brain is offline."
-        except Exception as e:
+        except Exception:
             logger.exception("LLM Request Failed")
             return "I encountered a neural error."

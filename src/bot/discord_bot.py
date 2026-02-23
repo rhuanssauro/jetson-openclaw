@@ -3,15 +3,16 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+
 class OpenClawDiscord(commands.Bot):
     def __init__(self, token, ai_client, hardware):
         self.token = token
         self.ai = ai_client
         self.hardware = hardware
-        
+
         intents = discord.Intents.default()
         intents.message_content = True
-        
+
         super().__init__(command_prefix="!claw ", intents=intents)
 
     async def on_ready(self):
@@ -24,7 +25,7 @@ class OpenClawDiscord(commands.Bot):
         if message.content.startswith("!claw"):
             await self.process_commands(message)
             return
-            
+
         # Check if the message is a direct message or mentions the bot
         if isinstance(message.channel, discord.DMChannel) or self.user in message.mentions:
             query = message.content.replace(f"<@{self.user.id}>", "").strip()
@@ -32,7 +33,7 @@ class OpenClawDiscord(commands.Bot):
                 return
 
             await message.channel.send("Thinking...")
-            
+
             # Simple RAG or direct LLM call
             response = await self.ai.chat(query)
             await message.channel.send(response)

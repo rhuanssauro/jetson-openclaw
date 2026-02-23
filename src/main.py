@@ -2,8 +2,9 @@
 import asyncio
 import os
 import signal
-from loguru import logger
+
 from dotenv import load_dotenv
+from loguru import logger
 
 from bot.discord_bot import OpenClawDiscord
 from bot.slack_bot import OpenClawSlack
@@ -12,6 +13,7 @@ from llm.ollama_client import OllamaClient
 
 load_dotenv()
 
+
 async def shutdown(loop, signal=None):
     if signal:
         logger.info(f"Received exit signal {signal.name}...")
@@ -19,6 +21,7 @@ async def shutdown(loop, signal=None):
     [task.cancel() for task in tasks]
     await asyncio.gather(*tasks, return_exceptions=True)
     loop.stop()
+
 
 async def main():
     logger.info("Initializing OpenClaw System...")
@@ -30,9 +33,9 @@ async def main():
     # AI Init
     ai = OllamaClient(
         host=os.getenv("OLLAMA_HOST", "http://ollama:11434"),
-        model=os.getenv("OLLAMA_MODEL", "llama3:8b-instruct-q4_K_M")
+        model=os.getenv("OLLAMA_MODEL", "llama3:8b-instruct-q4_K_M"),
     )
-    
+
     # Check if AI is ready
     if await ai.check_connection():
         logger.info("Connected to local LLM (Ollama)")
@@ -56,9 +59,11 @@ async def main():
 
     if slack_token and slack_app_token:
         logger.info("Starting Slack Bot (Socket Mode)...")
-        slack_bot = OpenClawSlack(bot_token=slack_token, app_token=slack_app_token, ai_client=ai, hardware=claw)
+        slack_bot = OpenClawSlack(
+            bot_token=slack_token, app_token=slack_app_token, ai_client=ai, hardware=claw
+        )
         tasks.append(asyncio.create_task(slack_bot.start()))
-    
+
     if not tasks:
         logger.error("No bot tokens provided! Please set DISCORD_TOKEN or SLACK_BOT_TOKEN in .env")
         return
@@ -72,10 +77,11 @@ async def main():
         claw.cleanup()
         logger.info("OpenClaw stopped.")
 
+
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    
+
     signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
     for s in signals:
         loop.add_signal_handler(s, lambda s=s: asyncio.create_task(shutdown(loop, signal=s)))

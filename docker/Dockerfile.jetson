@@ -1,0 +1,24 @@
+# Dockerfile.jetson — Production image for NVIDIA Jetson Orin Nano (ARM64 + CUDA)
+# Uses dustynv/l4t-python as base, which includes JetPack, CUDA, and Python 3.10
+# built for L4T r36.x (JetPack 6.x). Do NOT use this image for x86 CI.
+FROM dustynv/l4t-python:3.10-r36.4.0
+
+WORKDIR /app
+
+# Install system dependencies for GPIO, I2C, and SPI access
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgpiod-dev \
+    i2c-tools \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY . .
+
+# Default command
+CMD ["python3", "-u", "src/main.py"]

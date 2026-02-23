@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 # src/hardware/claw_controller.py
 import time
+from typing import Any
 
 from loguru import logger
 
 try:
-    import Jetson.GPIO as GPIO
+    import Jetson.GPIO as GPIO  # type: ignore[import-untyped]
 except ImportError:
     logger.warning("Jetson.GPIO not found, running in MOCK mode")
     GPIO = None
@@ -13,14 +16,14 @@ except ImportError:
 class ClawController:
     # Pin definitions (Adjust based on wiring)
     # Using simple BCM numbering or Board numbering
-    SERVO_PIN = 33  # PWM capable pin on Jetson Nano header (PWM0)
+    SERVO_PIN: int = 33  # PWM capable pin on Jetson Nano header (PWM0)
 
-    def __init__(self):
-        self.state = "UNKNOWN"
-        self.mock = GPIO is None
-        self.pwm = None
+    def __init__(self) -> None:
+        self.state: str = "UNKNOWN"
+        self.mock: bool = GPIO is None
+        self.pwm: Any | None = None
 
-    def init_gpio(self):
+    def init_gpio(self) -> None:
         if self.mock:
             logger.info("Hardware initialized (MOCK)")
             return
@@ -32,7 +35,7 @@ class ClawController:
         self.pwm.start(0)
         logger.info("Hardware initialized (GPIO)")
 
-    def open_claw(self):
+    def open_claw(self) -> str:
         logger.info("Opening Claw...")
         if not self.mock and self.pwm:
             # Duty cycle for open (approx 2.5% to 12.5%)
@@ -44,7 +47,7 @@ class ClawController:
         self.state = "OPEN"
         return "Claw is now OPEN"
 
-    def close_claw(self):
+    def close_claw(self) -> str:
         logger.info("Closing Claw...")
         if not self.mock and self.pwm:
             self.pwm.ChangeDutyCycle(2.5)
@@ -54,10 +57,10 @@ class ClawController:
         self.state = "CLOSED"
         return "Claw is now CLOSED"
 
-    def get_status(self):
+    def get_status(self) -> str:
         return self.state
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         if not self.mock:
             if self.pwm:
                 self.pwm.stop()

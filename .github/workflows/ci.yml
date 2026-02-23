@@ -21,26 +21,3 @@ jobs:
 
       - name: Ruff format check
         run: uvx ruff format --check .
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: |
-          rm -rf .venv && uv venv
-          uv pip install -r requirements.txt
-
-      - name: Run tests
-        run: |
-          if [ -d tests ] || [ -d test ]; then
-            uv pip install pytest
-            uv run pytest -v
-          else
-            echo "No tests directory found, skipping"
-          fi

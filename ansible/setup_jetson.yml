@@ -53,6 +53,24 @@
         group: "{{ user_name }}"
         mode: '0755'
 
+    - name: Install udev rules for GPIO
+      copy:
+        src: ../hardware/udev/99-openclaw-gpio.rules
+        dest: /etc/udev/rules.d/99-openclaw-gpio.rules
+        mode: '0644'
+      notify: Reload udev
+
+    - name: Ensure gpio group exists
+      group:
+        name: gpio
+        state: present
+
+    - name: Add user to gpio group
+      user:
+        name: "{{ user_name }}"
+        groups: gpio
+        append: yes
+
     - name: Setup swap file (essential for 8GB RAM + LLM)
       command: fallocate -l 8G /swapfile
       args:
@@ -84,3 +102,7 @@
       service:
         name: docker
         state: restarted
+
+    - name: Reload udev
+      command: udevadm control --reload-rules && udevadm trigger
+

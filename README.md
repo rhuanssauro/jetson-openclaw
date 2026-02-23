@@ -29,16 +29,13 @@ OpenClaw is an agentic Personal AI Assistant designed to run locally on the NVID
     cd jetson-openclaw
     ```
 
-### 1. System Setup (Ansible)
+### 1. System Setup (Automated)
 
-We use Ansible to provision the Jetson, install Docker, and configure swap (crucial for 8GB RAM).
+We provide a script to handle everything (Ansible + Docker + Swap).
 
 ```bash
-# Install Ansible if not present
-sudo apt update && sudo apt install -y ansible
-
-# Run the playbook
-ansible-playbook ansible/setup_jetson.yml
+sudo chmod +x scripts/setup.sh
+sudo ./scripts/setup.sh
 ```
 
 ### 2. Configuration
@@ -63,17 +60,14 @@ OLLAMA_HOST=http://ollama:11434
 OLLAMA_MODEL=llama3:8b-instruct-q4_K_M
 ```
 
-### 3. Deploy
+### 3. Updates
 
-Start the stack using Docker Compose:
+To pull the latest code and rebuild:
 
 ```bash
-docker-compose -f docker/docker-compose.yml up -d
+chmod +x scripts/update.sh
+./scripts/update.sh
 ```
-
-This will:
-1.  Start the Ollama service (GPU accelerated).
-2.  Build and start the OpenClaw Python application.
 
 ## Usage
 

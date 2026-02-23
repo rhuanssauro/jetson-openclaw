@@ -1,0 +1,7 @@
+# Allow non-root users to access GPIO
+SUBSYSTEM=="gpio", GROUP="gpio", MODE="0660"
+# New interface for libgpiod
+KERNEL=="gpiochip*", GROUP="gpio", MODE="0660"
+
+# PWM access
+SUBSYSTEM=="pwm*", GROUP="gpio", MODE="0660"

@@ -5,8 +5,10 @@ RPi.GPIO # Often needed as fallback/compat
 
 # Async & Networking
 aiohttp
-fastapi
-uvicorn
+
+# Future: REST API
+# fastapi
+# uvicorn
 
 # Bot Integrations
 discord.py
@@ -23,3 +25,7 @@ pyyaml
 pydantic
 tenacity
 loguru
+
+# Testing
+pytest
+pytest-asyncio

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # src/bot/slack_bot.py
 import asyncio
 
@@ -7,9 +9,18 @@ from slack_sdk.socket_mode.aiohttp import SocketModeClient
 from slack_sdk.socket_mode.request import SocketModeRequest
 from slack_sdk.socket_mode.response import SocketModeResponse
 
+from hardware.claw_controller import ClawController
+from llm.ollama_client import OllamaClient
+
 
 class OpenClawSlack:
-    def __init__(self, bot_token, app_token, ai_client, hardware):
+    def __init__(
+        self,
+        bot_token: str,
+        app_token: str,
+        ai_client: OllamaClient,
+        hardware: ClawController,
+    ) -> None:
         self.bot_token = bot_token
         self.app_token = app_token
         self.ai = ai_client
@@ -17,14 +28,23 @@ class OpenClawSlack:
 
         self.web_client = WebClient(token=bot_token)
         self.socket_client = SocketModeClient(app_token=app_token, web_client=self.web_client)
+        self._bot_user_id: str | None = None
 
-    async def start(self):
+    async def _get_bot_user_id(self) -> str:
+        if self._bot_user_id is None:
+            result = await self.web_client.auth_test()
+            self._bot_user_id = result["user_id"]
+        return self._bot_user_id
+
+    async def start(self) -> None:
         logger.info("Connecting Slack Socket Mode...")
+        # Cache bot_user_id before receiving messages
+        await self._get_bot_user_id()
         self.socket_client.socket_mode_request_listeners.append(self.handle_request)
         await self.socket_client.connect()
         await asyncio.sleep(float("inf"))  # Keep running
 
-    async def handle_request(self, client: SocketModeClient, request: SocketModeRequest):
+    async def handle_request(self, client: SocketModeClient, request: SocketModeRequest) -> None:
         if request.type == "events_api":
             # Acknowledge receipt
             response = SocketModeResponse(envelope_id=request.envelope_id)
@@ -38,8 +58,8 @@ class OpenClawSlack:
                 channel_id = event["channel"]
                 user = event["user"]
 
-                # Remove mention
-                bot_user_id = (await self.web_client.auth_test())["user_id"]
+                # Remove mention using cached bot_user_id
+                bot_user_id = await self._get_bot_user_id()
                 prompt = text.replace(f"<@{bot_user_id}>", "").strip()
 
                 if not prompt:

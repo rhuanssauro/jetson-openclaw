@@ -81,7 +81,7 @@
       file:
         path: /swapfile
         mode: '0600'
-      when: swap_created.changed
+      # Run unconditionally so an existing world-readable swap is fixed on re-run
 
     - name: Format swap file
       command: mkswap /swapfile

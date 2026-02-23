@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # src/main.py
 import asyncio
 import os
@@ -14,7 +16,7 @@ from llm.ollama_client import OllamaClient
 load_dotenv()
 
 
-async def shutdown(loop, signal=None):
+async def shutdown(loop: asyncio.AbstractEventLoop, signal: signal.Signals | None = None) -> None:
     if signal:
         logger.info(f"Received exit signal {signal.name}...")
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
@@ -23,7 +25,7 @@ async def shutdown(loop, signal=None):
     loop.stop()
 
 
-async def main():
+async def main() -> None:
     logger.info("Initializing OpenClaw System...")
 
     # Hardware Init
@@ -47,10 +49,10 @@ async def main():
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     slack_app_token = os.getenv("SLACK_APP_TOKEN")
 
-    discord_bot = None
-    slack_bot = None
+    discord_bot: OpenClawDiscord | None = None
+    slack_bot: OpenClawSlack | None = None
 
-    tasks = []
+    tasks: list[asyncio.Task[None]] = []
 
     if discord_token:
         logger.info("Starting Discord Bot...")

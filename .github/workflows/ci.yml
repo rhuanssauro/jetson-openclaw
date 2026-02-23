@@ -21,3 +21,25 @@ jobs:
 
       - name: Ruff format check
         run: uvx ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Create venv and install dependencies
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          # Jetson.GPIO/RPi.GPIO are not available on x86 — ignore failures
+          uv pip install -r requirements.txt || true
+          uv pip install pytest pytest-asyncio pytest-cov
+
+      - name: Run tests with coverage
+        run: |
+          source .venv/bin/activate
+          pytest --cov=src --cov-report=term-missing --tb=short -v

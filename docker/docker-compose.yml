@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: openclaw-ollama
+    # Ollama is optimized for Jetson (supports CUDA out of the box with proper runtime)
+    runtime: nvidia
+    devices:
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h  # Keep models loaded
+
+  openclaw:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: openclaw-bot
+    depends_on:
+      - ollama
+    env_file:
+      - ../.env
+    volumes:
+      - ../src:/app/src
+      - ../config:/app/config
+    privileged: true # Required for Jetson.GPIO access
+    devices:
+      - /dev/i2c-0
+      - /dev/i2c-1
+      - /dev/spi
+      - /dev/spidev0.0
+    restart: unless-stopped
+    command: python3 -u src/main.py
+
+volumes:
+  ollama_data:

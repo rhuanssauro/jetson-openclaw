@@ -1,0 +1,25 @@
+# Hardware Control
+Jetson.GPIO
+periphery
+RPi.GPIO # Often needed as fallback/compat
+
+# Async & Networking
+aiohttp
+fastapi
+uvicorn
+
+# Bot Integrations
+discord.py
+slack-sdk
+slack-bolt
+
+# LLM & AI
+requests # For Ollama API
+ollama
+
+# Utilities
+python-dotenv
+pyyaml
+pydantic
+tenacity
+loguru

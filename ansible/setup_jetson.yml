@@ -1,0 +1,86 @@
+---
+- name: Setup Jetson Orin Nano for OpenClaw
+  hosts: localhost
+  connection: local
+  become: yes
+  vars:
+    project_root: "/opt/jetson-openclaw"
+    user_name: "{{ lookup('env', 'USER') }}"
+
+  tasks:
+    - name: Update apt cache and upgrade system
+      apt:
+        update_cache: yes
+        upgrade: dist
+        cache_valid_time: 3600
+
+    - name: Install essential packages
+      apt:
+        name:
+          - git
+          - curl
+          - python3-pip
+          - python3-venv
+          - build-essential
+          - docker.io
+          - docker-compose
+          - nano
+          - htop
+        state: present
+
+    - name: Configure Docker group
+      user:
+        name: "{{ user_name }}"
+        groups: docker
+        append: yes
+
+    - name: Ensure NVIDIA Container Runtime is setup
+      apt:
+        name: nvidia-container-toolkit
+        state: present
+      notify: Restart Docker
+
+    - name: Install Python dependencies for GPIO
+      pip:
+        name: Jetson.GPIO
+        executable: pip3
+
+    - name: Create project directory structure
+      file:
+        path: "{{ project_root }}"
+        state: directory
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        mode: '0755'
+
+    - name: Setup swap file (essential for 8GB RAM + LLM)
+      command: fallocate -l 8G /swapfile
+      args:
+        creates: /swapfile
+      register: swap_created
+
+    - name: Secure swap file
+      file:
+        path: /swapfile
+        mode: '0600'
+      when: swap_created.changed
+
+    - name: Format swap file
+      command: mkswap /swapfile
+      when: swap_created.changed
+
+    - name: Enable swap file
+      command: swapon /swapfile
+      when: swap_created.changed
+
+    - name: Persist swap file in fstab
+      lineinfile:
+        path: /etc/fstab
+        line: '/swapfile none swap sw 0 0'
+        state: present
+
+  handlers:
+    - name: Restart Docker
+      service:
+        name: docker
+        state: restarted

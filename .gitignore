@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+dist/
+build/
+*.egg-info/
+ollama_data/

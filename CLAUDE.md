@@ -38,7 +38,7 @@ User (Discord/Slack) --> Bot Layer --> LLM (Ollama, local)
 - **Async:** asyncio (all I/O is async)
 - **Linter/Formatter:** Ruff (`ruff.toml`, line-length 100, double quotes)
 - **Tests:** pytest (`pytest.ini`, pythonpath=src, testpaths=tests)
-- **CI:** GitHub Actions (lint-only: `uvx ruff check .` + `uvx ruff format --check .`)
+- **CI:** GitHub Actions (lint: ruff check + format, test: pytest with coverage)
 - **Container:** Docker + Docker Compose with NVIDIA runtime
 - **Config mgmt:** Ansible for Jetson host provisioning
 
@@ -48,16 +48,20 @@ User (Discord/Slack) --> Bot Layer --> LLM (Ollama, local)
 src/
   main.py                       # Entry point, asyncio loop, signal handling
   bot/
-    discord_bot.py              # OpenClawDiscord(commands.Bot)
-    slack_bot.py                # OpenClawSlack (Socket Mode)
+    discord_bot.py              # OpenClawDiscord(commands.Bot) + ClawCommands(Cog)
+    slack_bot.py                # OpenClawSlack (Socket Mode, cached bot_user_id)
   hardware/
     claw_controller.py          # ClawController (GPIO/PWM, mock-capable)
   llm/
-    ollama_client.py            # OllamaClient (async HTTP to Ollama)
+    ollama_client.py            # OllamaClient (async context manager, SSRF guard)
 tests/
-  test_claw.py                  # ClawController tests (mock mode)
+  test_claw.py                  # ClawController tests (3 tests)
+  test_ollama_client.py         # OllamaClient tests (12 tests)
+  test_discord_bot.py           # Discord bot tests (9 tests)
+  test_slack_bot.py             # Slack bot tests (11 tests)
 docker/
-  Dockerfile                    # python:3.10-slim-buster
+  Dockerfile                    # Dev image (python:3.10-slim-buster, non-root)
+  Dockerfile.jetson             # Jetson-native L4T base image
   docker-compose.yml            # ollama + openclaw services
 ansible/
   setup_jetson.yml              # Full Jetson provisioning playbook
@@ -66,7 +70,8 @@ hardware/
 scripts/
   setup.sh                      # Bootstrap (Ansible + Docker)
   update.sh                     # Pull + rebuild
-docs/                           # Reserved (empty)
+docs/
+  PLAYBOOK.md                   # Complete implementation guide (1900 lines)
 ```
 
 ## Development Commands
@@ -118,15 +123,10 @@ Defined in `.env` (copy from `.env.example`):
 - **Type hints:** Use throughout (target: mypy strict in future)
 - **Error handling:** Log with loguru, never crash silently, graceful degradation
 
-## Known Gaps (Improvement Opportunities)
+## Remaining Improvement Opportunities
 
-1. **Test coverage is minimal** — only 3 tests for ClawController; no tests for OllamaClient, Discord bot, or Slack bot
-2. **Dockerfile base image** — uses `python:3.10-slim-buster`, not a Jetson-native L4T image
-3. **Unused dependencies** — `fastapi` and `uvicorn` in requirements.txt but not used
-4. **No type hints** — source files lack type annotations
-5. **aiohttp session management** — `OllamaClient.session` created but never properly closed
-6. **docker-compose version key** — `version: "3.8"` is deprecated in modern Docker Compose
-7. **Empty `__init__.py` files** — could export public APIs
-8. **No REST API** — fastapi listed but no endpoints implemented
-9. **No conversation context** — LLM calls are stateless (no chat history)
-10. **Slack `auth_test` called per message** — should be cached
+1. **Empty `__init__.py` files** — could export public APIs
+2. **No REST API** — fastapi/uvicorn removed from deps; could be re-added if REST endpoints are needed
+3. **No conversation context** — LLM calls are stateless (no chat history)
+4. **Test coverage at 65%** — `src/main.py` has 0% coverage (hard to test signal handling)
+5. **No mypy CI step** — type hints are present but not validated in CI yet

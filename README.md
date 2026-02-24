@@ -82,13 +82,37 @@ chmod +x scripts/update.sh
 *   **Chat:** Mention `@OpenClaw` to chat.
 *   **Commands:** Just say "open claw" or "close claw" in a mention.
 
+## Documentation
+
+For the **complete step-by-step guide** — from unboxing the Jetson to daily usage — see:
+
+**[docs/PLAYBOOK.md](docs/PLAYBOOK.md)** — The OpenClaw Implementation Playbook
+
+Covers hardware assembly, JetPack flashing, Discord/Slack bot creation, model selection, troubleshooting, and development workflow. No prior experience required.
+
 ## Development
 
 To run locally (on your laptop) with mocked hardware:
 
-1.  Create a venv: `python3 -m venv .venv && source .venv/bin/activate`
-2.  Install deps: `pip install -r requirements.txt`
-3.  Run: `python src/main.py`
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+uv pip install -r requirements.txt
+python src/main.py
+```
+
+### Testing
+
+```bash
+uvx pytest -v              # Run all 35 tests
+uvx pytest --cov=src       # With coverage report
+```
+
+### Linting
+
+```bash
+uvx ruff check .           # Lint
+uvx ruff format --check .  # Format check
+```
 
 ## License
 

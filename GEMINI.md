@@ -2,55 +2,43 @@
 
 ## Project Overview
 **Project Name:** `jetson-openclaw`
-**Status:** Initialization / Empty Repository
+**Status:** Production-ready (v1.0)
 
-This project appears to be focused on robotic manipulation (specifically a "claw" or gripper mechanism) running on the NVIDIA Jetson platform. As the repository is currently empty, this document serves as the foundational context and architectural guide for future development.
+OpenClaw is an agentic Personal AI Assistant running on NVIDIA Jetson Orin Nano 8GB. It provides Discord and Slack chat interfaces to control a physical servo-based robotic claw via GPIO/PWM and interact with a local LLM through Ollama — completely offline and privacy-first.
 
-## Inferred Architecture & Tech Stack
-Based on the project name, the following stack is recommended:
-- **Hardware Platform:** NVIDIA Jetson (Nano, Xavier, Orin)
-- **Primary Language:** Python 3.8+ (for rapid prototyping/ML) or C++ (for real-time control)
+## Architecture & Tech Stack
+
+- **Hardware Platform:** NVIDIA Jetson Orin Nano 8GB (JetPack 6, Ubuntu 22.04)
+- **Primary Language:** Python 3.10
 - **Key Libraries:**
-  - `Jetson.GPIO` or `periphery` for hardware control
-  - `opencv-python` for vision-based grasping
-  - `ros2` (Humble/Iron) if integrating with a larger robot system
-- **Containerization:** Docker (highly recommended for Jetson reproducibility)
+  - `Jetson.GPIO` for hardware control (mock-capable for development)
+  - `discord.py` for Discord bot (Cog pattern)
+  - `slack-sdk` for Slack bot (Socket Mode)
+  - `aiohttp` for async HTTP to Ollama
+  - `loguru` for structured logging
+- **Containerization:** Docker Compose with NVIDIA runtime
+- **Provisioning:** Ansible for Jetson host setup
 
-## Recommended Directory Structure
-Adopting a standard robotics project structure from the start:
+## Documentation
 
-```
-jetson-openclaw/
-├── src/                    # Source code
-│   ├── driver/             # Hardware interface for the claw (PWM/Serial/GPIO)
-│   ├── vision/             # Computer vision pipelines (if applicable)
-│   ├── control/            # High-level logic & state machines
-│   └── main.py             # Entry point
-├── tests/                  # Unit and integration tests
-├── hardware/               # 3D models (STL/STEP), schematics, wiring diagrams
-├── docker/                 # Dockerfiles for development/deployment
-├── scripts/                # Utility scripts (setup, install, flash)
-├── docs/                   # Documentation
-├── requirements.txt        # Python dependencies
-└── README.md               # Project documentation
-```
+| Document | Purpose |
+|----------|---------|
+| [README.md](README.md) | Quick start and overview |
+| [CLAUDE.md](CLAUDE.md) | AI assistant project context (architecture, conventions, commands) |
+| [docs/PLAYBOOK.md](docs/PLAYBOOK.md) | Complete implementation guide — hardware to production (1900 lines) |
 
-## Development Standards & Mandates
+## Development Standards
 
 ### 1. Hardware Safety
-- **Mock First:** All hardware interfaces MUST have software mocks. Development should be possible without physical hardware attached.
-- **Safety Limits:** Implement software limits for servo ranges/motor torque to prevent hardware damage.
+- **Mock First:** All hardware interfaces have software mocks. Development works without physical hardware.
+- **Safety Limits:** Servo duty cycles calibrated per servo; external power supply required.
 
 ### 2. Code Quality
-- **Typing:** Enforce strict type hinting in Python (`mypy`).
-- **Linting:** Use `ruff` or `flake8` for linting and `black` for formatting.
-- **Testing:** Use `pytest`. All hardware drivers must be unit-testable via mocks.
+- **Type hints:** All source files annotated (`from __future__ import annotations`)
+- **Linting:** Ruff (line-length 100, double quotes, isort)
+- **Testing:** pytest + pytest-asyncio (35 tests, 65% coverage)
+- **CI:** GitHub Actions — lint (ruff) + test (pytest with coverage)
 
 ### 3. Git Workflow
-- **Commits:** Follow conventional commits (e.g., `feat: add pwm driver`, `fix: servo jitter`).
-- **Branches:** Use feature branches; never commit directly to `main` for significant changes.
-
-## Next Steps
-1.  Initialize the project structure (create `src`, `tests`, `README.md`).
-2.  Define the hardware interface requirements.
-3.  Set up the development environment (Docker or venv).
+- **Commits:** Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`)
+- **Branches:** Feature branches with squash-merge PRs to `main`
